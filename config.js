@@ -18,6 +18,6 @@ export default {
     courseModuleCreated:false,
     courseModuleUpdated:false,
     //de aqui en adelante las que falta por sincronizar
-    courseModuleDeleted:true,
+    courseModuleDeleted:false,
     courseModuleCompletionUpdated:false
 }

@@ -6,12 +6,10 @@ import dotenv from 'dotenv'
 
 dotenv.config()
 
-console.log(process.env.TOKEN);
-
 if (config.createUser) {
     cron.schedule('*/1 * * * * *', async () => {
         var person = faker.person;
-        var createUser = await axios("http://10.8.0.11/moodle/webservice/rest/server.php",{params:{
+        var createUser = await axios(process.env.BASE_URL,{params:{
             'moodlewsrestformat':'json',
             'wstoken':process.env.TOKEN,
             'wsfunction':'core_user_create_users',
@@ -31,7 +29,7 @@ if (config.createUser) {
 
 if (config.updatedUser) {
         var person = faker.person;
-        axios("http://10.8.0.11/moodle/webservice/rest/server.php",{
+        axios(process.env.BASE_URL,{
             params:{
                 'moodlewsrestformat':'json',
                 'wstoken':process.env.TOKEN,
@@ -54,7 +52,7 @@ if (config.updatedUser) {
                 user.email = faker.internet.email();
                 user.suspended = 0;
                 
-                var updateUser = await axios("http://10.8.0.11/moodle/webservice/rest/server.php",{
+                var updateUser = await axios(process.env.BASE_URL,{
                     params:{
                         'moodlewsrestformat':'json',
                         'wstoken':process.env.TOKEN,
@@ -69,7 +67,7 @@ if (config.updatedUser) {
 
 if(config.deletedUser){
     var person = faker.person;
-    axios("http://10.8.0.11/moodle/webservice/rest/server.php",{
+    axios(process.env.BASE_URL,{
         params:{
             'moodlewsrestformat':'json',
             'wstoken':process.env.TOKEN,
@@ -84,7 +82,7 @@ if(config.deletedUser){
         for (let index = 0; index < users.length; index++) {
             const element = users[index];
             
-            var deletedUser = await axios("http://10.8.0.11/moodle/webservice/rest/server.php",{
+            var deletedUser = await axios(process.env.BASE_URL,{
                 params:{
                     'moodlewsrestformat':'json',
                     'wstoken':process.env.TOKEN,
@@ -101,7 +99,7 @@ if (config.createCourse) {
     cron.schedule('*/1 * * * * *', async () => {
         var course = faker.company.name().toLowerCase();
         var createCourse = await axios(
-            "http://10.8.0.11//moodle/webservice/rest/server.php",
+            "http://localhost//moodle/webservice/rest/server.php",
             {
                 params:{
                     'moodlewsrestformat':'json',
@@ -122,30 +120,48 @@ if (config.createCourse) {
 }
 
 if(config.deleteCourse){
-    var course = 7122;
-    var courses = [428]
-    cron.schedule('*/1 * * * * *', async () => {
-        var deleteCourse = await axios(
-            "http://10.8.0.11/moodle/webservice/rest/server.php",
+    var courses = await axios(
+        process.env.BASE_URL,{
+            params:{
+                'moodlewsrestformat':'json',
+                'wstoken':process.env.TOKEN,
+                'wsfunction':'core_course_get_courses'
+            }
+        }
+    )
+
+    for (let i = 0; i < courses.data.length; i++) {
+        const element = courses.data[i];
+        var courseDeleted = await axios(
+            "http://localhost//moodle/webservice/rest/server.php",
             {
                 params:{
                     'moodlewsrestformat':'json',
                     'wstoken':process.env.TOKEN,
                     'wsfunction':'core_course_delete_courses',
-                    'courseids':[course]
+                    'courseids':[element.id]
                 }
             }
         )
-        course = course + 1
-        console.log("Delete course: ",deleteCourse.data);
-    })
+        console.log(courseDeleted.data);
+    }
 }
 
 if (config.courseUpdated) {
-    cron.schedule('*/1 * * * * *', async () => {
+    var courses = await axios(
+        process.env.BASE_URL,{
+            params:{
+                'moodlewsrestformat':'json',
+                'wstoken':process.env.TOKEN,
+                'wsfunction':'core_course_get_courses'
+            }
+        }
+    )
+    for(var i = 0; i < courses.data.length; i++){
+        const element = courses.data[i]
         var course = faker.company.name().toLowerCase();
         var courseUpdated = await axios(
-            "http://10.8.0.11//moodle/webservice/rest/server.php",
+            "http://localhost//moodle/webservice/rest/server.php",
             {
                 params:{
                     'moodlewsrestformat':'json',
@@ -153,7 +169,7 @@ if (config.courseUpdated) {
                     'wsfunction':'core_course_update_courses',
                     'courses':[
                         {
-                            'id':1229,
+                            'id':element.id,
                             'fullname':course,
                             'shortname':course,
                             'categoryid':1
@@ -163,11 +179,11 @@ if (config.courseUpdated) {
             }
         )
         console.log("Course update: ",courseUpdated.data);
-    })
+    }
 }
 
 if(config.userEnrolmentCreated){
-    var getallpersons = await axios("http://10.8.0.11/moodle/webservice/rest/server.php",
+    var getallpersons = await axios(process.env.BASE_URL,
     {
         params:{
             'moodlewsrestformat':'json',
@@ -181,7 +197,7 @@ if(config.userEnrolmentCreated){
             ]
         }
     })
-    var getallcourses = await axios("http://10.8.0.11/moodle/webservice/rest/server.php",{
+    var getallcourses = await axios(process.env.BASE_URL,{
         params:{
             'moodlewsrestformat':'json',
             'wstoken':process.env.TOKEN,
@@ -196,7 +212,7 @@ if(config.userEnrolmentCreated){
             for (var j = 0; j < getallcourses.data.length; j++) {
                 const course = getallcourses.data[j];
                 if(course.id != 1){
-                    var enrol = await axios('http://10.8.0.11/moodle/webservice/rest/server.php',{
+                    var enrol = await axios(process.env.BASE_URL,{
                         params: {
                             'moodlewsrestformat':'json',
                             'wstoken':process.env.TOKEN,
@@ -218,7 +234,7 @@ if(config.userEnrolmentCreated){
 }
 
 if (config.userEnrolmentDeleted) {
-    var getallcourses = await axios("http://10.8.0.11/moodle/webservice/rest/server.php",{
+    var getallcourses = await axios(process.env.BASE_URL,{
         params:{
             'moodlewsrestformat':'json',
             'wstoken':process.env.TOKEN,
@@ -228,7 +244,7 @@ if (config.userEnrolmentDeleted) {
 
     for (var j = 0; j < getallcourses.data.length; j++) {
         const course = getallcourses.data[j];
-        var enrollemntByCourse = await axios('http://10.8.0.11/moodle/webservice/rest/server.php',{
+        var enrollemntByCourse = await axios(process.env.BASE_URL,{
             params:{
                 'moodlewsrestformat':'json',
                 'wstoken':process.env.TOKEN,
@@ -242,7 +258,7 @@ if (config.userEnrolmentDeleted) {
                 if(element.hasOwnProperty('enrolledcourses')){
                     for (let indexEnrollment = 0; indexEnrollment < element.enrolledcourses.length; indexEnrollment++) {
                         const enrollElement = element.enrolledcourses[indexEnrollment];
-                        const unenrollment = await axios('http://10.8.0.11/moodle/webservice/rest/server.php',{
+                        const unenrollment = await axios(process.env.BASE_URL,{
                             params:{
                                 'moodlewsrestformat':'json',
                                 'wstoken':process.env.TOKEN,
@@ -265,7 +281,7 @@ if (config.userEnrolmentDeleted) {
 }
 
 if(config.messageSent){
-    var getallpersons = await axios("http://10.8.0.11/moodle/webservice/rest/server.php",
+    var getallpersons = await axios(process.env.BASE_URL,
     {
         params:{
             'moodlewsrestformat':'json',
@@ -284,7 +300,7 @@ if(config.messageSent){
     var listTwo = getallpersons.data.users
     for (let indexListOne = 0; indexListOne < listOne.length; indexListOne++) {
         const elementListOne = listOne[indexListOne];
-        var message = await axios("http://10.8.0.11/moodle/webservice/rest/server.php",{
+        var message = await axios(process.env.BASE_URL,{
             params:{
                 'moodlewsrestformat':'json',
                 'wstoken':process.env.TOKEN,
@@ -305,7 +321,7 @@ if(config.messageSent){
 
 if(config.messageViewed){
 
-    var getallpersons = await axios("http://10.8.0.11/moodle/webservice/rest/server.php",
+    var getallpersons = await axios(process.env.BASE_URL,
     {
         params:{
             'moodlewsrestformat':'json',
@@ -323,7 +339,7 @@ if(config.messageViewed){
     for (let index = 0; index < getallpersons.data.users.length; index++) {
         const element = getallpersons.data.users[index];
         
-        var conversations = await axios("http://10.8.0.11/moodle/webservice/rest/server.php",{
+        var conversations = await axios(process.env.BASE_URL,{
             params:{
                 'moodlewsrestformat':'json',
                 'wstoken':process.env.TOKEN,
@@ -335,7 +351,7 @@ if(config.messageViewed){
         for (let j = 0; j < conversations.data.conversations.length; j++) {
             const elementcconversation = conversations.data.conversations[j];
 
-            var markAsRead = await axios("http://10.8.0.11/moodle/webservice/rest/server.php",{
+            var markAsRead = await axios(process.env.BASE_URL,{
                 params:{
                     'moodlewsrestformat':'json',
                     'wstoken':process.env.TOKEN,
@@ -351,7 +367,7 @@ if(config.messageViewed){
 }
 
 if(config.messageDeleted){
-    var getallpersons = await axios("http://10.8.0.11/moodle/webservice/rest/server.php",
+    var getallpersons = await axios(process.env.BASE_URL,
     {
         params:{
             'moodlewsrestformat':'json',
@@ -368,7 +384,7 @@ if(config.messageDeleted){
     for (let index = 0; index < getallpersons.data.users.length; index++) {
         const element = getallpersons.data.users[index];
         
-        var conversations = await axios("http://10.8.0.11/moodle/webservice/rest/server.php",{
+        var conversations = await axios(process.env.BASE_URL,{
             params:{
                 'moodlewsrestformat':'json',
                 'wstoken':process.env.TOKEN,
@@ -383,7 +399,7 @@ if(config.messageDeleted){
             if (elementmessages.length > 0) {
                 for (let w = 0; w < elementmessages.length; w++) {
                     const elementmessage = elementmessages[w];
-                    var deletemessage = await axios('http://10.8.0.11/moodle/webservice/rest/server.php',{
+                    var deletemessage = await axios(process.env.BASE_URL,{
                         params:{
                             'moodlewsrestformat':'json',
                             'wstoken':process.env.TOKEN,
@@ -400,7 +416,7 @@ if(config.messageDeleted){
 }
 
 if (config.courseModuleCreated) {
-    var modules = await axios("http://10.8.0.11/moodle/webservice/rest/server.php",{
+    var modules = await axios(process.env.BASE_URL,{
         params:{
             'moodlewsrestformat':'json',
             'wstoken':process.env.TOKEN,
@@ -415,7 +431,7 @@ if (config.courseModuleCreated) {
 }
 
 if(config.courseModuleUpdated){
-    var moduleUpdated = await axios("http://10.8.0.11/moodle/webservice/rest/server.php",{
+    var moduleUpdated = await axios(process.env.BASE_URL,{
         params:{
             'moodlewsrestformat':'json',
             'wstoken':process.env.TOKEN,
@@ -428,7 +444,7 @@ if(config.courseModuleUpdated){
 }
 
 if (config.courseModuleDeleted) {
-    var courses = await axios("http://10.8.0.11/moodle/webservice/rest/server.php",{
+    var courses = await axios(process.env.BASE_URL,{
         params:{
             'moodlewsrestformat':'json',
             'wstoken':process.env.TOKEN,
@@ -444,7 +460,7 @@ if (config.courseModuleDeleted) {
             }
         })
     });
-    var deletedCourseModule = await axios("http://10.8.0.11/moodle/webservice/rest/server.php",{
+    var deletedCourseModule = await axios(process.env.BASE_URL,{
         params:{
             'moodlewsrestformat':'json',
             'wstoken':process.env.TOKEN,
